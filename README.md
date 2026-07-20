@@ -86,18 +86,18 @@ Shop photos live in `client/src/assets/`. To swap one out, replace the file
 (keep the same name) or add a new import wherever it's used — mainly in
 `client/src/pages/Home.jsx`.
 
+
 ## Setting up for real business use (100% free)
 
 This is the recommended path if you're actually going to take bookings
-with this — it fixes the one real gap in the free demo setup (reservation
-data getting wiped on redeploy) using services that are free permanently,
-not just free trials.
+with this — it fixes the one real gap in a bare-bones demo (reservation
+data getting wiped) using services that are free permanently, not just
+free trials, and don't require a credit card.
 
 **The stack:**
-- **Neon** — free Postgres database, data persists forever (doesn't expire
-  like some "free trial" databases)
-- **Render** — free backend hosting
-- **Netlify** — free frontend hosting
+- **Neon** — free Postgres database, data persists forever
+- **Vercel** — free hosting for both the backend (as serverless
+  functions) and the frontend (static site) — no credit card required
 
 ### Step 1 — Create the database (Neon)
 
@@ -110,99 +110,58 @@ not just free trials.
 You don't need to create any tables — the backend does that automatically
 the first time it connects.
 
-### Step 2 — Deploy the backend (Render)
+### Step 2 — Deploy the backend to Vercel
 
-Same as before, but now add one more environment variable:
-
-1. Push `scoops` to a GitHub repo.
-2. [render.com](https://render.com) → **New + → Blueprint** → connect your
-   repo (it reads `render.yaml` automatically).
-3. Set these environment variables when prompted:
+1. Push this `scoops` folder to a GitHub repo.
+2. Go to [vercel.com](https://vercel.com) → sign up (GitHub sign-in is
+   easiest) → **Add New… → Project** → import your repo.
+3. Set:
+   - **Root Directory:** `server`
+   - Framework Preset: leave as detected (Other / Node.js)
+4. Expand **Environment Variables** and add:
    - `DATABASE_URL` = the Neon connection string from Step 1
    - `ADMIN_PASSWORD` = a password you choose
-   - `ADMIN_TOKEN` = any random string you choose (e.g. mash the keyboard)
-4. Deploy. Check the logs — you should see `Storage: Postgres
-   (persistent)`. If you instead see the "local data.json" message, the
-   `DATABASE_URL` variable wasn't picked up — double check it's set.
-5. Copy your backend's URL, e.g. `https://scoops-api.onrender.com`.
+   - `ADMIN_TOKEN` = any random string you choose
+5. Click **Deploy**. Once it finishes, open the **Logs** for the
+   deployment and confirm you see `Storage: Postgres (persistent)`.
+6. Copy your backend's URL, e.g. `https://scoops-api.vercel.app`.
 
-### Step 3 — Deploy the frontend (Netlify)
+### Step 3 — Deploy the frontend to Vercel
 
-Same as the general instructions below: connect the repo, base directory
-`client`, build command `npm run build`, publish directory `client/dist`,
-and set `VITE_API_URL` to your Render URL from Step 2.
-
-That's it — this combination has no expiration dates and no data loss on
-redeploy, at $0/month. The only trade-offs of the free tiers:
-
-- Render's free web service spins down after ~15 minutes of no traffic;
-  the next request wakes it up in ~30–50 seconds. Fine for a new business
-  getting occasional bookings; if that delay ever bothers customers, a
-  paid Render instance (~$7/mo) removes it.
-- Neon's free tier is generous for a single shop (plenty of storage and
-  requests for reservation data) and doesn't have a spin-down delay.
-
-When you're ready for a custom domain (`scoopsicecream.com` instead of the
-`.netlify.app` address), that's a small paid step — buy the domain
-(~$10–15/year from somewhere like Namecheap) and point it at Netlify;
-Netlify's own hosting stays free.
-
-## General deployment reference
-
-## Deploying a live demo link
-
-You need two deployments: the backend (API) on a Node host, and the
-frontend (static site) on a static host. Both have free tiers.
-
-### 1. Deploy the backend to Render
-
-1. Push this `scoops` folder to a GitHub repo (Render deploys from GitHub).
-2. Go to [render.com](https://render.com) → sign up/log in → **New +** →
-   **Blueprint** → connect your repo. Render will detect `render.yaml` in
-   this folder and configure the service automatically.
-   - No GitHub repo yet? In Render, you can also do **New + → Web Service**
-     manually: set root directory to `server`, build command `npm install`,
-     start command `npm start`.
-3. When prompted, set the environment variables `ADMIN_PASSWORD` and
-   `ADMIN_TOKEN` to your own values (don't leave the defaults on a public
-   demo).
-4. Once deployed, copy the URL Render gives you, e.g.
-   `https://scoops-api.onrender.com`.
-
-   Note: Render's free tier spins the service down after inactivity (the
-   first request after a while takes ~30s to wake up) and its free disk is
-   not persistent across deploys, so reservation data may reset when you
-   redeploy. Fine for a demo; upgrade to a paid instance + persistent disk
-   for anything real.
-
-### 2. Deploy the frontend to Netlify (or Vercel)
-
-1. Go to [netlify.com](https://netlify.com) → **Add new site** → **Import
-   an existing project** → connect the same GitHub repo.
+1. Back on Vercel, **Add New… → Project** again, same repo (Vercel lets
+   you deploy the same repo twice as separate projects).
 2. Set:
-   - **Base directory:** `client`
-   - **Build command:** `npm run build`
-   - **Publish directory:** `client/dist`
-3. Under **Environment variables**, add:
-   - `VITE_API_URL` = the Render backend URL from step 1 (no trailing
-     slash), e.g. `https://scoops-api.onrender.com`
-4. Deploy. Netlify gives you a live link like
-   `https://scoops-yourname.netlify.app` — that's your demo link.
+   - **Root Directory:** `client`
+   - Framework Preset: Vite (should auto-detect)
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `dist`
+3. Add environment variable:
+   - `VITE_API_URL` = your backend URL from Step 2 (no trailing slash)
+4. Click **Deploy**. Vercel gives you a live link like
+   `https://scoops.vercel.app` — that's your live website.
 
-(Vercel works the same way — same settings, just on Vercel's dashboard.)
+That's it — this combination has no expiration dates, no data loss on
+redeploy, and no card on file, at $0/month. The only trade-off: Vercel's
+free serverless functions have a short execution timeout (10s) per
+request, which is far more than this app ever needs.
 
-### No GitHub yet?
+When you're ready for a custom domain (`scoopsicecream.com` instead of
+the `.vercel.app` address), that's a small paid step — buy the domain
+(~$10–15/year from somewhere like Namecheap) and attach it under the
+frontend project's **Settings → Domains** in Vercel; Vercel's own hosting
+stays free.
 
-Netlify also supports **drag-and-drop deploys** for the frontend only: run
-`npm run build` in `client/` locally, then drag the resulting `client/dist`
-folder onto [app.netlify.com/drop](https://app.netlify.com/drop). That
-gets you a live link fast, but you'd still need the backend deployed
-somewhere (Render) and `VITE_API_URL` set before building, since drag-and-
-drop deploys can't set environment variables after the fact — set it in a
-local `.env` file (copy `.env.example`) before running the build.
+## Quick redeploy reference
+
+- **Backend:** Vercel project with root directory `server`, env vars
+  `DATABASE_URL`, `ADMIN_PASSWORD`, `ADMIN_TOKEN`.
+- **Frontend:** Vercel project with root directory `client`, build
+  command `npm run build`, output directory `dist`, env var
+  `VITE_API_URL` pointing at the backend project's URL.
+- Pushing to the `main` branch on GitHub automatically redeploys both.
 
 ### Keeping the admin password safe
 
 Make sure to set your own `ADMIN_PASSWORD` and `ADMIN_TOKEN` values on
-Render rather than using the defaults (`scoops2026` / `scoops-admin-token`)
+Vercel rather than using the defaults (`scoops2026` / `scoops-admin-token`)
 — those are only meant for local testing.
